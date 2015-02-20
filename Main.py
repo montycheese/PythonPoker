@@ -16,19 +16,47 @@ www.github.com/montycheese
 """
 SINGLE_BOT_MODE = False
 PLAY_WITH_BLINDS = True
+num_players = 1
 
 def main():
+	global num_players, PLAY_WITH_BLINDS
 	print "Welcome to Python Poker\nPress Enter to play"
 	user_input = raw_input()
 	if user_input == "":
 		pass
 	else:
 		exit(0)
-	if SINGLE_BOT_MODE:
+	if SINGLE_BOT_MODE: # debugging mode
 		num_players = 1
 	else:
-		num_players = int(raw_input("How many players do you want to play with? (limit 4): "))
-	
+		try:
+			num_players = int(raw_input("How many players do you want to play with? (limit 4): "))
+			if num_players < 1 or num_players > 8:
+				raise ValueError
+		except:
+			print "Please enter a number 1-8"
+			num_players = int(raw_input("How many players do you want to play with? (limit 4): "))
+	try:
+		while(True):
+			user_input = raw_input("Play with blinds? (y/n)")
+			if (user_input.lower() == "y" or user_input.lower == "yes"):
+				break
+			else if (user_input.lower() == "n" or user_input.lower == "no"):
+				PLAY_WITH_BLINDS = False
+				break
+			else:
+				continue
+	except:
+		print "Your input was invalid, goodbye."
+		exit(0)
+	run()
+	print "Thanks for playing!"
+
+def run():
+	playing = True
+	won_round = True
+	round = 1
+	# Creating bot opponents 
 	cpu_players = []
 	for i in range(num_players):
 		cpu = Player("Player" + str(i+2))
@@ -40,10 +68,7 @@ def main():
 	deck.create_deck()
 	hand = Hand()
 	table = Table()
-	playing = True
-	won_round = True
-	round = 1
-		
+	
 	#start game loop 
 	while (player.can_play() and playing):
 		deck.shuffle()
@@ -140,9 +165,11 @@ def main():
 		print "\n\n\n\n\n\n\n\n\n\n\n%s" % ("*"*50)
 		round +=1
 		############ End Round loop ##############
-		
-	print "Thanks for playing"
 	#### END GAME #######
+
+
+
+	
 
 def cpu_betting_algorithm(amt_of_money, hand, cards_on_table): 
 	pass #higher the val, higher the chance they bet
