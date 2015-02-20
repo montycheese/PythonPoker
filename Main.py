@@ -14,6 +14,7 @@ Requires python 2.xx
 montanawong@gmail.com
 www.github.com/montycheese
 """
+DEBUG_MODE = True
 SINGLE_BOT_MODE = False
 PLAY_WITH_BLINDS = True
 num_players = 1
@@ -30,18 +31,22 @@ def main():
 		num_players = 1
 	else:
 		try:
-			num_players = int(raw_input("How many players do you want to play with? (limit 4): "))
-			if num_players < 1 or num_players > 8:
-				raise ValueError
+			while(True):
+				num_players = int(raw_input("How many players do you want to play with? (limit 5): "))
+				if num_players < 1 or num_players > 5:
+					print "Enter a valid input"
+				else:
+					break
 		except:
-			print "Please enter a number 1-8"
-			num_players = int(raw_input("How many players do you want to play with? (limit 4): "))
+			print "Your input was invalid, goodbye."
+			exit(0)
+
 	try:
 		while(True):
 			user_input = raw_input("Play with blinds? (y/n)")
 			if (user_input.lower() == "y" or user_input.lower == "yes"):
 				break
-			else if (user_input.lower() == "n" or user_input.lower == "no"):
+			elif (user_input.lower() == "n" or user_input.lower == "no"):
 				PLAY_WITH_BLINDS = False
 				break
 			else:
@@ -71,6 +76,7 @@ def run():
 	
 	#start game loop 
 	while (player.can_play() and playing):
+		print "Round: %d" % round
 		deck.shuffle()
 		player.set_hand(hand)
 		if PLAY_WITH_BLINDS:
@@ -88,7 +94,8 @@ def run():
 		deck.deal(2, player.get_hand())
 		for cpu in cpu_players:
 			deck.deal(2, cpu.get_hand())
-			print "CPU HAND: "+ str(cpu.get_hand())##### FOR DEBUGGING
+			if (DEBUG_MODE):
+				print "CPU HAND: "+ str(cpu.get_hand())##### FOR DEBUGGING
 		# Hold'em rules: discard, "burn" 2 cards before the display of the flop
 		for i in range(5):
 			if i < 2:
@@ -130,8 +137,11 @@ def run():
 				break # remove later
 			#Now need to calculate who won based on high card of the hand
 			elif cpu_hand_ranking == player_hand_ranking:
+				#Even though both the player and a cpu have the same ranking hand
+				#The winner can be determined based on the numerical value of the hand
 				if player.get_hand().calculate_value() > cpu.get_hand().calculate_value():
 					won_round = True
+				#If the numerical value and rank are identical
 				elif player.get_hand().calculate_value() == cpu.get_hand().calculate_value():
 					print "You both had the same ranked hand. Pot is split"
 					table.distribute_winnings_to(cpu, player)
@@ -151,10 +161,11 @@ def run():
 		deck.reset()
 		player.get_hand().clear()
 		table.clear()
-		
+		#remove any cpu's that are out of chips and can no longer play
 		for cpu in cpu_players:
 			cpu.get_hand().clear()
 			if not cpu.can_play():
+				print "%s is out of chips and has left the game" % str(cpu)
 				cpu_players.remove(cpu)
 		if cpu_players == []:
 			print "You've eliminated all the other opponents"
