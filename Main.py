@@ -4,6 +4,8 @@ from Deck import Deck
 from Hand import Hand
 from Pile import Table
 from Player import Player
+from ComputerPlayer import ComputerPlayer
+from time import sleep
 
 """ 
 Python Poker, Texas Hold 'em v1.0 
@@ -64,7 +66,7 @@ def run():
 	# Creating bot opponents 
 	cpu_players = []
 	for i in range(num_players):
-		cpu = Player("Player" + str(i+2))
+		cpu = ComputerPlayer("Player" + str(i+2), "Blinky") #Playing style
 		hand = Hand()
 		cpu.set_hand(hand)
 		cpu_players.append(cpu)
@@ -96,6 +98,7 @@ def run():
 			deck.deal(2, cpu.get_hand())
 			if (DEBUG_MODE):
 				print "CPU HAND: "+ str(cpu.get_hand())##### FOR DEBUGGING
+		non_folded_cpu = cpu_players[:]
 		# Hold'em rules: discard, "burn" 2 cards before the display of the flop
 		for i in range(5):
 			if i < 2:
@@ -104,31 +107,64 @@ def run():
 				table.push(deck.draw())
 		turn = 1
 		
+		#condition to allow bets to continue 
+		betting = True
 		while turn < 4:
 			print "%s:\n%s \n" % ("Flop" if turn ==1 else ("Turn" if turn ==2 else "River"), str(table))
 			print "Current Hand: %s" % str(player.get_hand())
 			print "Chip amount: %d" % player.get_value()
-			user_input = parse_input("Bet, Check, or Fold? (Enter B/C/F):")
-			if user_input == "B":
-				bet = player.bet()
-				table.add_bet(bet)
-			elif user_input == "C":
-				pass
-			elif user_input == "F":
-				won_round = False
-				break
-			print "Current Pot: %d" % table.get_value()
+			current_bet = 0
+			
+			###START BETTING LOOP#####
+			while(betting or not [cpu.has_checked for cpu in non_folded_cpu]):
+				user_input = parse_input("Bet, Check, or Fold? (Enter B/C/F):")
+				if user_input == "B":
+					current_bet = player.bet()
+					table.add_bet(bet)
+				elif user_input == "C":
+					pass
+				elif user_input == "F":
+					betting = False
+					won_round = False
+				for cpu in non_folded_cpu:
+					print "%s is deciding..." % str(cpu)
+					sleep(1)
+					cpu_bet = cpu.bet(current_bet)
+					if cpu_bet = -1:
+						print "%s folds." % str(cpu)
+						non_folded_cpu.remove(cpu)
+					elif cpu_bet == 0 and current_bet ==0:
+						print "%s checks." % str(cpu)
+						continue
+					#there was a raise
+					elif cpu_bet > current_bet:
+						print "%s raises to %d." % (str(cpu), cpu_bet) 
+						table.add_bet(cpu_bet)
+						current_bet = cpu_bet
+					elif cpu_bet == current_bet:
+						print "%s matches the bet." % cpu_bet
+						table.add_bet(cpu_bet)
+					else:
+						raise RuntimeError("Refer to line 141")
+					print "Current Pot: %d" % table.get_value()
+					
+					#####ADD CONDITION TO EXIT OUT OF BETTING LOOP
+					for cpu in non_folded_cpu:
+						if cpu.get_last_bet() != current_bet or 
+				####END BET LOOP####
 			if turn != 3:
 				table.burn(deck.draw())
 				table.push(deck.draw())
 			turn +=1
+			
+			
 			
 		# Calculating who won
 		player_hand_ranking = table.find_greatest_value(player.get_hand())
 		print "You had a: %s" % table.get_hand_ranking(player_hand_ranking)
 		#cpu_has_highest_hand = False implement later
 		#highest_hand = None
-		for cpu in cpu_players:
+		for cpu in non_folded_cpu:
 			cpu_hand_ranking = table.find_greatest_value(cpu.get_hand())
 			if cpu_hand_ranking > player_hand_ranking:
 				print "You lost this round, %s had a \n%s." % (cpu.get_name(), table.get_hand_ranking(cpu_hand_ranking))
@@ -164,6 +200,7 @@ def run():
 		#remove any cpu's that are out of chips and can no longer play
 		for cpu in cpu_players:
 			cpu.get_hand().clear()
+			cpu.normalize() # reset certain instance variables to reflect new round
 			if not cpu.can_play():
 				print "%s is out of chips and has left the game" % str(cpu)
 				cpu_players.remove(cpu)
