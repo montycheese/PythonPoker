@@ -13,7 +13,7 @@ class PlayingStyle():
 		self.type = type
 
 	def __str__(self):
-		return type
+		return self.type
 	
 	#Determines how likely a bot is going to bet
 	def get_willingness_to_bet(self):
@@ -21,10 +21,10 @@ class PlayingStyle():
 			return 0.75
 		#pinky will have a smarter strategy that will be propagated in the betting method
 		elif self.type == "Pinky":
-			rand = Random()
+			rand = random
 			return 0.3
 		elif self.type == "Inky":
-			rand = Random()
+			rand = random
 			#will be a floating point number between 0 and 1
 			return rand.random()
 		elif self.type == "Clyde":

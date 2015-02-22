@@ -1,26 +1,23 @@
 from Hand import Hand
 from PlayingStyle import PlayingStyle
 from Player import Player
-import random
 from math import ceil
+import random
 
 class ComputerPlayer(Player):
 
 	def __init__(self, name, playing_style, is_big_blind = False, is_small_blind = False):
-		super(ComputerPlayer, self, name, is_big_blind, is_small_blind)
+		super(ComputerPlayer, self).__init__(name, is_big_blind = False, is_small_blind = False)
 		self.playing_style = PlayingStyle(playing_style)
-		self.last_bet = -1
 	
 	def normalize():
 		self.last_bet = -1
-	def get_last_bet():
-		return self.last_bet
 	
 	#later implement a restriction on minimum bet based on blind size
 	def bet(self, bet_size):
 		if str(self.playing_style) == "Blinky":
 			return self.decide_blinkys_bet(bet_size)
-		elif if str(self.playing_style) == "Pinky":
+		elif str(self.playing_style) == "Pinky":
 			return self.decide_pinkys_bet(bet_size)
 		elif str(self.playing_style) == "Inky":
 			return self.decide_inkys_bet(bet_size)
@@ -30,7 +27,7 @@ class ComputerPlayer(Player):
 	
 	#Blinky match bets until he is forced to go all in, then there is a % chance he will go all in
 	def decide_blinkys_bet(self, bet_size):
-		rand = Random()
+		rand = random
 		if bet_size == 0:
 			if rand.random() >= 0.5 or self.chip_amount < 2:
 				return 0

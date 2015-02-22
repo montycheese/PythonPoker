@@ -5,11 +5,15 @@ class Player(object):
 	def __init__(self, name, is_big_blind = False, is_small_blind = False):
 		self.name = name
 		self.chip_amount = 100
+		self.last_bet = -1
 		self.hand = None
 		self.has_checked = False
 		self.is_all_in = False # implement this later
 		self.is_big = is_big_blind #implement later
 		self.is_small = is_small_blind #implement later
+	
+	def __str__(self):
+		return self.name
 		
 	def is_big_blind(self):
 		return self.is_big
@@ -20,6 +24,9 @@ class Player(object):
 		self.is_big = big
 		self.is_small = small
 	
+	def get_last_bet(self):
+		return self.last_bet
+	
 	def check(self): #implement this later
 		self.has_checked = True
 	
@@ -29,8 +36,6 @@ class Player(object):
 	def un_check(self):
 		self.has_checked = False
 	
-	def get_name(self):
-		return self.name
 	
 	def set_hand(self, hand):
 		self.hand = hand
