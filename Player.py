@@ -49,7 +49,7 @@ class Player(object):
 	def bet(self):
 		bet = int(raw_input("Amount: "))
 		while (bet > self.chip_amount or bet < 1):
-			bet = raw_input("Amount must be less than %d or greater than 0: " % self.chip_amount)
+			bet = int(raw_input("Amount must be less than %d or greater than 0: " % self.chip_amount))
 		if  bet == self.chip_amount:
 			print "%s going all in..." % self.name
 			self.chip_amount -= bet

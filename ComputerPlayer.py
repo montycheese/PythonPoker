@@ -7,11 +7,14 @@ import random
 class ComputerPlayer(Player):
 
 	def __init__(self, name, playing_style, is_big_blind = False, is_small_blind = False):
-		super(ComputerPlayer, self).__init__(name, is_big_blind = False, is_small_blind = False)
+		super(ComputerPlayer, self).__init__(name, is_big_blind , is_small_blind)
 		self.playing_style = PlayingStyle(playing_style)
+		self.has_bet = False
 	
-	def normalize():
+	def normalize(self):
 		self.last_bet = -1
+		self.has_bet = False
+		self.has_checked = False
 	
 	#later implement a restriction on minimum bet based on blind size
 	def bet(self, bet_size):
@@ -30,6 +33,7 @@ class ComputerPlayer(Player):
 		rand = random
 		if bet_size == 0:
 			if rand.random() >= 0.5 or self.chip_amount < 2:
+				self.check()
 				return 0
 			else:
 				bet = int(ceil((self.chip_amount * 0.1)))
@@ -37,10 +41,12 @@ class ComputerPlayer(Player):
 				self.last_bet = bet
 				return bet
 		if self.chip_amount > bet_size:
+			#call bet
 			if rand.random() >= 0.5:
 				self.chip_amount -=bet_size
 				self.last_bet = bet_size
 				return bet_size
+			#raise
 			else:
 				bet =  bet_size + int(((self.chip_amount + bet_size)/2))
 				self.chip_amount -= bet
@@ -59,6 +65,16 @@ class ComputerPlayer(Player):
 		else:
 			raise RuntimeError("Shouldnt happen!")
 			return 0
+	#TODO
+	def decide_pinkys_bet(self, bet_size):
+		pass 
+	def decide_inkys_bet(self, bet_size):
+		pass
+	def decide_clydes_bet(self, bet_size):
+		pass
+		
+	def has_bet(self):
+		return self.has_bet
 	
 	
 			

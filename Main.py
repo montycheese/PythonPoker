@@ -19,6 +19,7 @@ www.github.com/montycheese
 DEBUG_MODE = True
 SINGLE_BOT_MODE = False
 PLAY_WITH_BLINDS = True
+PLAYING_STYLES = ["Blinky", "Pinky", "Inky", "Clyde"]
 num_players = 1
 
 def main():
@@ -66,7 +67,7 @@ def run():
 	# Creating bot opponents 
 	cpu_players = []
 	for i in range(num_players):
-		cpu = ComputerPlayer("CPU" + str(i+2), "Blinky") #Playing style
+		cpu = ComputerPlayer("CPU" + str(i+1), PLAYING_STYLES[0]) #Playing style
 		hand = Hand()
 		cpu.set_hand(hand)
 		cpu_players.append(cpu)
@@ -117,18 +118,19 @@ def run():
 			current_bet = 0
 			
 			###START BETTING LOOP#####
-			while(betting or not [cpu.has_checked() for cpu in non_folded_cpu]):
+			while(betting or not [cpu.is_checked() for cpu in non_folded_cpu]):
 				ready_to_exit = True #boolean to control wheter we leave bet loop
 				user_input = parse_input("Bet, Check, or Fold? (Enter B/C/F):")
 				if user_input == "B":
 					current_bet = player.bet()
 					table.add_bet(current_bet)
-				#ADD SO I CANT CHECK IF THE BET IS HIGHER THAN MY LAST
+				#ADD SO I CAN CHECK IF THE BET IS HIGHER THAN MY LAST
 				elif user_input == "C":
 					pass
 				elif user_input == "F":
 					betting = False
 					won_round = False
+				#for loop to decide cpu action
 				for cpu in non_folded_cpu:
 					print "%s is deciding..." % str(cpu)
 					sleep(1)
@@ -136,21 +138,21 @@ def run():
 					if cpu_bet == -1:
 						print "%s folds." % str(cpu)
 						non_folded_cpu.remove(cpu)
-					elif cpu_bet == 0 and current_bet == 0:
+					elif cpu.is_checked() and current_bet == 0:
 						print "%s checks." % str(cpu)
-						continue
 					#there was a raise
 					elif cpu_bet > current_bet:
 						print "%s raises to %d." % (str(cpu), cpu_bet) 
 						table.add_bet(cpu_bet)
 						current_bet = cpu_bet
 					elif cpu_bet == current_bet:
-						print "%s matches the bet." % cpu_bet
+						print "%s matches the bet." % str(cpu)
 						table.add_bet(cpu_bet)
 					else:
 						raise RuntimeError("Problem Occured, exiting")
 						exit(0)
-					print "Current Pot: %d" % table.get_value()
+					print "\nCurrent Pot: %d" % table.get_value()
+					#end for
 					
 					if non_folded_cpu == []:
 						break
@@ -164,25 +166,29 @@ def run():
 						ready_to_exit = False
 						print "Current Bet : %d" % current_bet
 					elif player.get_last_bet() > current_bet:
-						raise RuntimeError("Error occured")
+						raise RuntimeError("Error occured, player bet greater than current bet, should be the same or lesser in value")
 						exit(0)
+					if ready_to_exit:
+						break
 				####END BET LOOP####
 			if turn != 3:
 				table.burn(deck.draw())
 				table.push(deck.draw())
-			turn +=1
-			
+			if non_folded_cpu != []:
+				map(lambda cpu: cpu.normalize(), non_folded_cpu)
+			turn += 1
 			
 		# Calculating who won
 		player_hand_ranking = table.find_greatest_value(player.get_hand())
-		print "You had a: %s" % table.get_hand_ranking(player_hand_ranking)
+		print "You had a: %s" % table.get_hand_ranking(player_hand_ranking)	
+
 		#cpu_has_highest_hand = False implement later
 		#highest_hand = None
 		try:
 			for cpu in non_folded_cpu:
 				cpu_hand_ranking = table.find_greatest_value(cpu.get_hand())
 				if cpu_hand_ranking > player_hand_ranking:
-					print "You lost this round, %s had a \n%s." % (cpu.get_name(), table.get_hand_ranking(cpu_hand_ranking))
+					print "You lost this round, %s had a \n%s." % (str(cpu), table.get_hand_ranking(cpu_hand_ranking))
 					table.distribute_winnings_to(cpu)
 					won_round = False
 					break # remove later
@@ -199,13 +205,16 @@ def run():
 						won_round = False
 						break
 					else:
-						print "You lost this round, %s had a \n%s." % (cpu.get_name(), table.get_hand_ranking(cpu_hand_ranking))
+						print "You lost this round, %s had a \n%s." % (str(cpu), table.get_hand_ranking(cpu_hand_ranking))
 						table.distribute_winnings_to(cpu)
 						won_round = False
 						break # remove later
 		#In the case that all cpu's folded 
 		except IndexError:
 			pass
+		
+
+		
 		if won_round:
 			print "Congrats, you had the strongest hand this round you won $%d worth of chips!" % table.get_value()
 			table.distribute_winnings_to(player)
@@ -223,7 +232,8 @@ def run():
 				cpu_players.remove(cpu)
 		if cpu_players == []:
 			print "You've eliminated all the other opponents"
-			break
+			playing = False
+			continue
 		if PLAY_WITH_BLINDS: 
 			table.inc_blinds(round)
 		print "\n\n\n\n\n\n\n\n\n\n\n%s" % ("*"*50)

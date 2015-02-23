@@ -74,7 +74,7 @@ class Table(object):
 						players[index-1].set_blinds()
 					except IndexError: #at the first index of list
 						player[len(players)-1].set_blinds()
-				return
+
 					
 		
 	def clear(self):
